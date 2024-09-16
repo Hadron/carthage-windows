@@ -11,3 +11,9 @@ from carthage import *
 from carthage.modeling import *
 from carthage.ansible import *
 from carthage.network import V4Config
+
+from . import cd
+class layout(CarthageLayout):
+
+    no_prompt_install_image = cd.NoPromptInstallImage
+    autounattend_cd = cd.AutoUnattendCd
