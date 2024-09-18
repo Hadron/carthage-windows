@@ -112,10 +112,6 @@
 				<RunSynchronousCommand wcm:action="add">
 					<Order>1</Order>
 					<Path>net.exe accounts /maxpwage:UNLIMITED</Path>
-      <RunSynchronousCommand wcm:action="add">
-        <Order>2</Order>
-        <Path>powershell.exe -noprofile -ExecutionPolicy unrestricted C:\Windows\Setup\specialize.ps1</Path>
-      </RunSynchronousCommand>
 				</RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>2</Order>
@@ -193,14 +189,10 @@
 					<Order>20</Order>
 					<Path>reg.exe add "HKLM\Software\Policies\Microsoft\Windows\CloudContent" /v "DisableWindowsConsumerFeatures" /t REG_DWORD /d 0 /f</Path>
 				</RunSynchronousCommand>
-				<RunSynchronousCommand wcm:action="add">
-					<Order>21</Order>
-					<Path>powershell.exe -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\Windows\Panther\unattend.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</Path>
-				</RunSynchronousCommand>
-				<RunSynchronousCommand wcm:action="add">
-					<Order>22</Order>
-					<Path>powershell.exe -NoProfile -Command "Get-Content -LiteralPath '%TEMP%\VirtIoGuestTools.ps1' -Raw | Invoke-Expression;"</Path>
-				</RunSynchronousCommand>
+      <RunSynchronousCommand wcm:action="add">
+        <Order>21</Order>
+        <Path>powershell.exe -noprofile -ExecutionPolicy unrestricted C:\Windows\Setup\specialize.ps1</Path>
+      </RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>23</Order>
 					<Path>reg.exe load "HKU\DefaultUser" "C:\Users\Default\NTUSER.DAT"</Path>
@@ -259,6 +251,10 @@
 				<SynchronousCommand wcm:action="add">
 					<Order>1</Order>
 					<CommandLine>reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoLogonCount /t REG_DWORD /d 0 /f</CommandLine>
+				</SynchronousCommand>
+				<SynchronousCommand wcm:action="add">
+					<Order>2</Order>
+					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Unrestricted c:\windows\setup\firstlogon.ps1</CommandLine>
 				</SynchronousCommand>
 			</FirstLogonCommands>
 		</component>
