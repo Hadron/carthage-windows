@@ -6,6 +6,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the file
 # LICENSE for details.
 
+from pathlib import Path
 import shutil
 from carthage import *
 import carthage.sh
@@ -42,6 +43,7 @@ class QemuDrivers(ModelTasks, WinConfigPlugin):
     )
     oem_msis = (
         'virtio-win-gt-x64.msi',
+        'guest-agent/qemu-ga-x86_64.msi',
     )
     
     @setup_task("Pull out virtio drivers")
@@ -68,9 +70,9 @@ class QemuDrivers(ModelTasks, WinConfigPlugin):
     async def apply(self, wconfig):
         oem = self.stamp_path/'oem'
         drivers = self.stamp_path/'drivers'
-        for o in self.oem_msis:
-            wconfig.oem_files.append(oem/o)
-            wconfig.specialize_powershell.add(f'msiexec /i c:\\windows\\setup\{o} /nq /norestart')
+        for o in map(lambda p: Path(p), self.oem_msis):
+            wconfig.oem_files.append(oem/(o.name))
+            wconfig.specialize_powershell.append(f'msiexec /i c:\\windows\\setup\\{o.name} /qn /norestart')
         v = driver_version_str(wconfig.windows_version)
         for d in self.drivers:
             if list(drivers.glob(f'{d}/{v}/amd64')):
