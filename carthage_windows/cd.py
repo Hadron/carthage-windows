@@ -6,22 +6,50 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the file
 # LICENSE for details.
 
+import contextlib
 import shutil
+from pathlib import Path
+import carthage
 from carthage import *
 from carthage.modeling import *
 from carthage import files
 from carthage import sh
 from carthage.plugins import CarthagePlugin
+from .config import *
 
 __all__ = []
 
+@contextlib.asynccontextmanager
+async def extract_cd(iso_file:str, out_dir:Path) -> Path:
+    '''
+    Returns a path of the directory containing the contents of the CD.
+    Perhaps by extracting; perhaps by mounting.
+    Will be deleted/unmounted when the context exits
+    :param out_dir: an output directory that will be created if it does not exist and will be claned on context exit.
+    '''
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if sevenzip := getattr(carthage.sh, '7z', None):
+        try:
+            await sevenzip('x', '-o'+str(out_dir), '--', iso_file)
+            yield Path(out_dir)
+        finally:
+            shutil.rmtree(out_dir)
+    else:
+        await carthage.sh.mount(
+            '-oloop',
+            iso_file, out_dir)
+        try:
+            yield out_dir
+        finally:
+            await carthage.sh.umount(out_dir)
+            
 @inject_autokwargs(
     carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'),
     )
 class NoPromptInstallImage(ModelTasks):
 
     def find_base_cd(self):
-        images = self.carthage_windows.resource_dir.glob('assets/*.iso')
+        images = self.carthage_windows.resource_dir.glob('assets/Win11*.iso')
         images_list = list(images)
         assert len(images_list) == 1
         return images_list[0]
@@ -59,19 +87,10 @@ class NoPromptInstallImage(ModelTasks):
             # And include the original image contents
             extract_dir,
             )
-        extract_dir.mkdir(parents=True, exist_ok=True)
-        await sh.mount(
-            '-oloop',
-            '-oro',
-            str(image),
-            extract_dir)
-        try:
-            breakpoint()
+        async with extract_cd(str(image), extract_dir):
             async with iso_builder as extra_dir:
                 # Add anything we want to overlay into the image into extra_dir
                 pass
-        finally:
-            await sh.umount(extract_dir)
 
     @repack_noprompt_image.check_completed()
     def repack_noprompt_image(self):
@@ -89,9 +108,18 @@ __all__ += ['NoPromptInstallImage']
 
 @inject_autokwargs(
     carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'),
+    windows_version=windows_version_key,
     )
 class AutoUnattendCd(ModelTasks):
 
+    async def build_config(self)-> WindowsConfig:
+        config = WindowsConfig(self.windows_version)
+        for _, plugin in await self.ainjector.filter_instantiate_async(
+                WinConfigPlugin,
+                ['name']):
+            await plugin.apply(config)
+        return config
+    
     @setup_task("Create autounattend CD")
     async def create_autounattend_cd(self):
         assets = self.carthage_windows.resource_dir/'assets'
@@ -99,6 +127,20 @@ class AutoUnattendCd(ModelTasks):
                                       'autounattend.iso',
                                       )
         async with iso_builder as contents_path:
+            wconfig = await self.build_config()
+            oem_setup = contents_path/'$OEM$/$$/Setup'
+            oem_setup.mkdir(parents=True)
+            for oem_file in wconfig.oem_files:
+                await sh.rsync('-a', oem_file, str(oem_setup))
+            driver_dir = contents_path/'$WinPEDriver$'
+            driver_dir.mkdir()
+            for driver_file in wconfig.driver_files:
+                await sh.rsync('-a', driver_file, driver_dir)
+            with oem_setup.joinpath('specialize.ps1').open('wt') as specialize:
+                for scriptlet in wconfig.specialize_powershell:
+                    specialize.write(scriptlet)
+                    specialize.write('\n')
+                    
             shutil.copy2(assets/'autounattend.xml',
                          contents_path)
 
