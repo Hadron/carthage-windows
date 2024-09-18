@@ -13,7 +13,14 @@ from carthage.ansible import *
 from carthage.network import V4Config
 
 from . import cd
+from . import qemu
+from . import config
+
 class layout(CarthageLayout):
 
     no_prompt_install_image = cd.NoPromptInstallImage
     autounattend_cd = cd.AutoUnattendCd
+
+    add_provider(config.windows_version_key, 'w11')
+    add_provider(qemu.QemuDrivers)
+    
