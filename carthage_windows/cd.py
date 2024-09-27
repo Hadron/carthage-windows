@@ -128,6 +128,11 @@ class AutoUnattendCd(ModelTasks):
                                       )
         async with iso_builder as contents_path:
             wconfig = await self.build_config()
+            if wconfig.enable_sshd:
+                wconfig.firstlogon_powershell.extend([
+                    'Add-WindowsCapability -online -name OpenSSH.Server~~~~0.0.1.0',
+                    'start-Service sshd',
+                    ])
             oem_setup = contents_path/'$OEM$/$$/Setup'
             oem_setup.mkdir(parents=True)
             for oem_file in wconfig.oem_files:
@@ -138,8 +143,12 @@ class AutoUnattendCd(ModelTasks):
                 await sh.rsync('-a', driver_file, driver_dir)
             with oem_setup.joinpath('specialize.ps1').open('wt') as specialize:
                 for scriptlet in wconfig.specialize_powershell:
-                    specialize.write(scriptlet)
-                    specialize.write('\n')
+                    specialize.write(scriptlet+'\n')
+                specialize.write('\n')
+            with oem_setup.joinpath('firstlogon.ps1').open('wt') as firstlogon:
+                for scriptlet in wconfig.firstlogon_powershell:
+                    firstlogon.write(scriptlet+'\n')
+                firstlogon.write('\n')
                     
             shutil.copy2(assets/'autounattend.xml',
                          contents_path)

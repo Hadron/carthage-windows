@@ -20,6 +20,8 @@ class WindowsConfig:
     #: the product key to select the windows image to install. This product key is not used for activation. This key is a generic key for Win 11 pro
     product_key:str = "VK7JG-NPHTM-C97JM-9MPGT-3V66T"
 
+    #: enable sshd
+    enable_sshd: bool = True
     #: Files to copy into c:\windows\setup
     oem_files:list = dataclasses.field(default_factory=lambda: [])
 
@@ -64,3 +66,16 @@ __all__ += ['WinConfigPlugin']
 windows_version_key = InjectionKey('carthage-windows/windows_version')
 
 __all__ += ['windows_version_key']
+@inject_autokwargs(
+    carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'),
+    )
+class WinRemotingPlugin(WinConfigPlugin):
+
+    name = 'windows_remoting'
+
+    async def apply(self, wconfig):
+        assets = self.carthage_windows.resource_dir/'assets'
+        wconfig.oem_files.append(assets/'ConfigureRemotingForAnsible.ps1')
+        wconfig.firstlogon_powershell.append('c:\\windows\\setup\\ConfigureRemotingForAnsible.ps1')
+
+__all__ += ['WinRemotingPlugin']

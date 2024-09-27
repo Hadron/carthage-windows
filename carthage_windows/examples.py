@@ -44,6 +44,6 @@ class NvdaInstall( WinConfigPlugin):
             return
         wconfig.oem_files.append(self.nvda_path)
         nvda_name = self.nvda_path.name
-        wconfig.specialize_powershell.append(f'c:\\windows\\setup\\{nvda_name} --install-silent --enable-start-on-logon=false')
+        wconfig.firstlogon_powershell.append(f'c:\\windows\\setup\\{nvda_name} --install-silent --enable-start-on-logon=true')
 
 __all__ += ['NvdaInstall']
