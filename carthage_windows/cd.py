@@ -112,6 +112,10 @@ __all__ += ['NoPromptInstallImage']
     )
 class AutoUnattendCd(ModelTasks):
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.injector.add_provider(InjectionKey(WindowsConfig), self.build_config)
+        
     async def build_config(self)-> WindowsConfig:
         config = WindowsConfig(self.windows_version)
         for _, plugin in await self.ainjector.filter_instantiate_async(
@@ -119,7 +123,10 @@ class AutoUnattendCd(ModelTasks):
                 ['name']):
             await plugin.apply(config)
         return config
+    autounattend_xml = mako_task('autounattend.xml.mako', wconfig=InjectionKey(WindowsConfig), sysprep=False)
+    sysprep_xml = mako_task('autounattend.xml.mako', sysprep=True, wconfig=InjectionKey(WindowsConfig), output='sysprep_unattend.xml')
     
+
     @setup_task("Create autounattend CD")
     async def create_autounattend_cd(self):
         assets = self.carthage_windows.resource_dir/'assets'
@@ -127,12 +134,20 @@ class AutoUnattendCd(ModelTasks):
                                       'autounattend.iso',
                                       )
         async with iso_builder as contents_path:
-            wconfig = await self.build_config()
+            wconfig = await self.ainjector.get_instance_async(WindowsConfig)
+            if wconfig.generalize:
+                run_service ='-Status Running'
+            else:
+                run_service = ''
             if wconfig.enable_sshd:
                 wconfig.firstlogon_powershell.extend([
                     'Add-WindowsCapability -online -name OpenSSH.Server~~~~0.0.1.0',
-                    'start-Service sshd',
+                    f'Set-Service sshd -StartupType automatic {run_service}',
                     ])
+            wconfig.oem_files.append(self.stamp_path/'sysprep_unattend.xml')
+            if wconfig.generalize:
+                wconfig.firstlogon_powershell.append(
+                    'c:\\windows\\system32\\sysprep\\sysprep /generalize /oobe /shutdown /unattend:c:\\windows\\setup\\sysprep_unattend.xml')
             oem_setup = contents_path/'$OEM$/$$/Setup'
             oem_setup.mkdir(parents=True)
             for oem_file in wconfig.oem_files:
@@ -150,7 +165,7 @@ class AutoUnattendCd(ModelTasks):
                     firstlogon.write(scriptlet+'\n')
                 firstlogon.write('\n')
                     
-            shutil.copy2(assets/'autounattend.xml',
+            shutil.copy2(self.stamp_path/'autounattend.xml',
                          contents_path)
 
 __all__ += ['AutounattendCd']

@@ -8,6 +8,7 @@
 
 import dataclasses
 from carthage import *
+import carthage.ssh
 
 __all__ = []
 
@@ -79,3 +80,18 @@ class WinRemotingPlugin(WinConfigPlugin):
         wconfig.firstlogon_powershell.append('c:\\windows\\setup\\ConfigureRemotingForAnsible.ps1')
 
 __all__ += ['WinRemotingPlugin']
+
+@inject_autokwargs(
+    authorized_keys=carthage.ssh.AuthorizedKeysFile)
+class AuthorizedKeysPlugin(WinConfigPlugin):
+
+    name = 'authorized_keys'
+
+    async def apply(self, wconfig:WindowsConfig):
+        wconfig.oem_files.append(self.authorized_keys.path)
+        wconfig.specialize_powershell.extend([
+            'New-Item -ItemType Directory -Force -Path c:\\ProgramData\\ssh',
+            'copy c:\\windows\\setup\\authorized_keys c:\\ProgramData\\ssh\\administrators_authorized_keys',
+            ])
+
+__all__ += ['AuthorizedKeysPlugin']

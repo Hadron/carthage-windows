@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
-	<!--https://schneegans.de/windows/unattend-generator/?LanguageMode=Unattended&UILanguage=en-US&Locale=en-US&Keyboard=00000409&GeoLocation=244&ProcessorArchitecture=amd64&BypassRequirementsCheck=true&ComputerNameMode=Custom&ComputerName=windows-base&TimeZoneMode=Implicit&PartitionMode=Unattended&PartitionLayout=GPT&EspSize=300&RecoveryMode=Partition&RecoverySize=1000&WindowsEditionMode=Unattended&WindowsEdition=pro&UserAccountMode=Unattended&AccountName0=Admin&AccountPassword0=blueteam1&AccountGroup0=Administrators&AccountName1=&AccountName2=&AccountName3=&AccountName4=&AutoLogonMode=Own&PasswordExpirationMode=Unlimited&LockoutMode=Default&HideFiles=Hidden&DisableWidgets=true&ClassicContextMenu=true&DisableAppSuggestions=true&VirtIoGuestTools=true&WifiMode=Interactive&ExpressSettings=DisableAll&KeysMode=Skip&WdacMode=Skip-->
+  <!--https://schneegans.de/windows/unattend-generator/?LanguageMode=Unattended&UILanguage=en-US&Locale=en-US&Keyboard=00000409&GeoLocation=244&ProcessorArchitecture=amd64&BypassRequirementsCheck=true&ComputerNameMode=Custom&ComputerName=windows-base&TimeZoneMode=Implicit&PartitionMode=Unattended&PartitionLayout=GPT&EspSize=300&RecoveryMode=Partition&RecoverySize=1000&WindowsEditionMode=Unattended&WindowsEdition=pro&UserAccountMode=Unattended&AccountName0=Admin&AccountPassword0=blueteam1&AccountGroup0=Administrators&AccountName1=&AccountName2=&AccountName3=&AccountName4=&AutoLogonMode=Own&PasswordExpirationMode=Unlimited&LockoutMode=Default&HideFiles=Hidden&DisableWidgets=true&ClassicContextMenu=true&DisableAppSuggestions=true&VirtIoGuestTools=true&WifiMode=Interactive&ExpressSettings=DisableAll&KeysMode=Skip&WdacMode=Skip-->
+  <!-- This configuration has been manually modified since it was auto-generated. to update from the auto generator it is probably best to use those initial settings and diff. -->
 	<settings pass="offlineServicing"></settings>
+        %if not sysprep:
 	<settings pass="windowsPE">
 		<component name="Microsoft-Windows-International-Core-WinPE" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
 			<SetupUILanguage>
@@ -84,7 +86,7 @@
 			</ImageInstall>
 			<UserData>
 				<ProductKey>
-					<Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+					<Key>${wconfig.product_key}</Key>
 				</ProductKey>
 				<AcceptEula>true</AcceptEula>
 			</UserData>
@@ -105,7 +107,9 @@
 			</RunSynchronous>
 		</component>
 	</settings>
+%endif
 	<settings pass="generalize"></settings>
+        %if not sysprep:
 	<settings pass="specialize">
 		<component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
 			<RunSynchronous>
@@ -211,6 +215,7 @@
 			<ComputerName>windows-base</ComputerName>
 		</component>
 	</settings>
+        %endif
 	<settings pass="auditSystem"></settings>
 	<settings pass="auditUser"></settings>
 	<settings pass="oobeSystem">
@@ -227,26 +232,29 @@
 						<Name>Admin</Name>
 						<Group>Administrators</Group>
 						<Password>
-							<Value>blueteam1</Value>
+							<Value>${wconfig.admin_password}</Value>
 							<PlainText>true</PlainText>
 						</Password>
 					</LocalAccount>
 				</LocalAccounts>
 			</UserAccounts>
+                        %if not sysprep:
 			<AutoLogon>
 				<Username>Admin</Username>
 				<Enabled>true</Enabled>
 				<LogonCount>1</LogonCount>
 				<Password>
-					<Value>blueteam1</Value>
+					<Value>${wconfig.admin_password}</Value>
 					<PlainText>true</PlainText>
 				</Password>
 			</AutoLogon>
+                        %endif
 			<OOBE>
 				<ProtectYourPC>3</ProtectYourPC>
 				<HideEULAPage>true</HideEULAPage>
 				<HideWirelessSetupInOOBE>false</HideWirelessSetupInOOBE>
 			</OOBE>
+                        %if not sysprep:
 			<FirstLogonCommands>
 				<SynchronousCommand wcm:action="add">
 					<Order>1</Order>
@@ -257,41 +265,7 @@
 					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Unrestricted c:\windows\setup\firstlogon.ps1</CommandLine>
 				</SynchronousCommand>
 			</FirstLogonCommands>
+                        %endif
 		</component>
 	</settings>
-	<Extensions xmlns="https://schneegans.de/windows/unattend-generator/">
-		<ExtractScript>
-param(
-    [xml] $Document
-);
-
-$scriptsDir = 'C:\Windows\Setup\Scripts\';
-foreach( $file in $Document.unattend.Extensions.File ) {
-    $path = [System.Environment]::ExpandEnvironmentVariables(
-        $file.GetAttribute( 'path' )
-    );
-    if( $path.StartsWith( $scriptsDir ) ) {
-        mkdir -Path $scriptsDir -ErrorAction 'SilentlyContinue';
-    }
-    $encoding = switch( [System.IO.Path]::GetExtension( $path ) ) {
-        { $_ -in '.ps1', '.xml' } { [System.Text.Encoding]::UTF8; }
-        { $_ -in '.reg', '.vbs', '.js' } { [System.Text.UnicodeEncoding]::new( $false, $true ); }
-        default { [System.Text.Encoding]::Default; }
-    };
-    [System.IO.File]::WriteAllBytes( $path, ( $encoding.GetPreamble() + $encoding.GetBytes( $file.InnerText.Trim() ) ) );
-}
-		</ExtractScript>
-		<File path="%TEMP%\VirtIoGuestTools.ps1">
-&amp; {
-	foreach( $letter in 'DEFGHIJKLMNOPQRSTUVWXYZ'.ToCharArray() ) {
-		$exe = "${letter}:\virtio-win-guest-tools.exe";
-		if( Test-Path -LiteralPath $exe ) {
-			Start-Process -FilePath $exe -ArgumentList '/passive', '/norestart' -Wait;
-			return;
-		}
-	}
-	'VirtIO Guest Tools image (virtio-win-*.iso) is not attached to this VM.';
-} *&gt;&amp;1 &gt;&gt; "$env:TEMP\VirtIoGuestTools.log";
-		</File>
-	</Extensions>
 </unattend>

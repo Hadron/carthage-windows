@@ -15,6 +15,7 @@ from carthage.network import V4Config
 from . import cd
 from . import qemu
 from . import config
+from . import examples
 
 class layout(CarthageLayout):
 
@@ -22,5 +23,7 @@ class layout(CarthageLayout):
     autounattend_cd = cd.AutoUnattendCd
 
     add_provider(config.windows_version_key, 'w11')
+    #add_provider(config.WinRemotingPlugin)
+    add_provider(config.AuthorizedKeysPlugin)
     add_provider(qemu.QemuDrivers)
     
