@@ -67,6 +67,14 @@ class NoPromptInstallImage(ModelTasks):
         '''
         return self.stamp_path.joinpath(        self.base_name+'_noprompt.iso')
 
+    def qemu_config(self, disk_config):
+        return dict(
+            path=self.image_name,
+            source_type='file',
+            driver='raw',
+            qemu_source='file'
+        )
+
     @setup_task("Repack without Prompt")
     async def repack_noprompt_image(self):
 # See https://palant.info/2023/02/13/automating-windows-installation-in-a-vm/ for the mkisofs options
@@ -135,7 +143,7 @@ class AutoUnattendCd(ModelTasks):
                                       )
         async with iso_builder as contents_path:
             wconfig = await self.ainjector.get_instance_async(WindowsConfig)
-            if wconfig.generalize:
+            if not wconfig.generalize:
                 run_service ='-Status Running'
             else:
                 run_service = ''
@@ -168,4 +176,43 @@ class AutoUnattendCd(ModelTasks):
             shutil.copy2(self.stamp_path/'autounattend.xml',
                          contents_path)
 
-__all__ += ['AutounattendCd']
+    def qemu_config(self, disk_config):
+        return dict(
+            path=self.stamp_path/'autounattend.iso',
+            source_type='file',
+            driver='raw',
+            qemu_source='file'
+        )
+
+__all__ += ['AutoUnattendCd']
+
+class LibvirtWindowsBaseImage(LibvirtImageModel):
+    self_provider(InjectionKey(carthage.image.ImageVolume))
+    name = 'windows_base'
+    create_size=128*1024**3
+    memory = 16*1024**3
+    cpus = 4
+    console_needed = True
+    disk_config = [
+        dict(
+            volume=InjectionKey(carthage.image.ImageVolume, _ready=False),),
+        dict(
+            volume=InjectionKey(NoPromptInstallImage),
+            target_type='cdrom',
+            bus='sata',
+            ),
+        dict(
+            volume=InjectionKey(AutoUnattendCd),
+            target_type='cdrom',
+            bus='sata',
+            )]
+
+    class WaitForInstall(carthage.machine.BaseCustomization):
+
+        description = "Wait for install to complete"
+
+        @setup_task("Wait")
+        async def wait_for_install(self):
+            await self.host.wait_for_shutdown()
+
+__all__ += ['LibvirtWindowsBaseImage']

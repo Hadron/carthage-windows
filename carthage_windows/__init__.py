@@ -8,6 +8,8 @@
 
 from carthage import inject, Injector
 from . import layout
+from .cd import *
+from .config import *
 
 @inject(injector=Injector)
 def carthage_plugin(injector):

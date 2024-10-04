@@ -71,8 +71,9 @@ class QemuDrivers(ModelTasks, WinConfigPlugin):
         oem = self.stamp_path/'oem'
         drivers = self.stamp_path/'drivers'
         for o in map(lambda p: Path(p), self.oem_msis):
-            wconfig.oem_files.append(oem/(o.name))
-            wconfig.specialize_powershell.append(f'msiexec /i c:\\windows\\setup\\{o.name} /qn /norestart')
+            install_msi(wconfig, oem/(o.name))
+        if result := self.injector(find_asset, 'spice-vdagent-x64*msi'):
+            install_msi(wconfig, result)
         v = driver_version_str(wconfig.windows_version)
         for d in self.drivers:
             if list(drivers.glob(f'{d}/{v}/amd64')):

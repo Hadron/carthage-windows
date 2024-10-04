@@ -95,3 +95,24 @@ class AuthorizedKeysPlugin(WinConfigPlugin):
             ])
 
 __all__ += ['AuthorizedKeysPlugin']
+
+@inject(
+    carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'))
+def find_asset(glob, *, carthage_windows):
+    assets = carthage_windows.resource_dir/'assets'
+    results = list(assets.glob(glob))
+    if len(results) == 0:
+        return None
+    if len(results) == 1:
+        return results[0]
+    raise ValueError('too many results')
+
+__all__ += ['find_asset']
+
+def install_msi(wconfig, msi_path):
+    wconfig.oem_files.append(msi_path)
+    wconfig.firstlogon_powershell.append(f'Write-Output "Installing {msi_path.name}"')
+    wconfig.firstlogon_powershell.append(f'msiexec /i c:\\windows\\setup\\{msi_path.name} /qn /norestart /L*+ c:\\windows\\setup\\{msi_path.name}.log |Out-Default')
+
+__all__ += ['install_msi']
+    

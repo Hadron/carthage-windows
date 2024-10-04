@@ -26,4 +26,5 @@ class layout(CarthageLayout):
     #add_provider(config.WinRemotingPlugin)
     add_provider(config.AuthorizedKeysPlugin)
     add_provider(qemu.QemuDrivers)
+    add_provider(examples.NvdaInstall)
     
