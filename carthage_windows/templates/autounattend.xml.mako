@@ -195,7 +195,7 @@
 				</RunSynchronousCommand>
       <RunSynchronousCommand wcm:action="add">
         <Order>21</Order>
-        <Path>powershell.exe -noprofile -ExecutionPolicy unrestricted C:\Windows\Setup\specialize.ps1 >c:\windows\setup\specialize.log *>&1</Path>
+        <Path>powershell.exe -noprofile -ExecutionPolicy unrestricted C:\Windows\Setup\specialize.ps1 &gt;c:\windows\setup\specialize.log *&gt;&amp;1</Path>
       </RunSynchronousCommand>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>23</Order>
@@ -262,7 +262,7 @@
 				</SynchronousCommand>
 				<SynchronousCommand wcm:action="add">
 					<Order>2</Order>
-					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Unrestricted c:\windows\setup\firstlogon.ps1 >c:\windows\setup\firstlogon.log *>&1</CommandLine>
+					<CommandLine>powershell.exe -NoProfile -ExecutionPolicy Unrestricted c:\windows\setup\firstlogon.ps1 &gt;c:\windows\setup\firstlogon.log *&gt;&amp;1</CommandLine>
 				</SynchronousCommand>
 			</FirstLogonCommands>
                         %endif
