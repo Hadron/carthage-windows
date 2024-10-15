@@ -74,6 +74,9 @@ class QemuDrivers(ModelTasks, WinConfigPlugin):
             install_msi(wconfig, oem/(o.name))
         if result := self.injector(find_asset, 'spice-vdagent-x64*msi'):
             install_msi(wconfig, result)
+        if result := self.injector(find_asset, 'winfsp*msi'):
+            install_msi(wconfig, result)
+            wconfig.firstlogon_powershell.append('Set-Service VirtioFsSvc -StartupType Automatic -Status Running')
         v = driver_version_str(wconfig.windows_version)
         for d in self.drivers:
             if list(drivers.glob(f'{d}/{v}/amd64')):
