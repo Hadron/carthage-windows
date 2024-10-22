@@ -20,53 +20,38 @@
                       <DiskID>0</DiskID> 
                       <WillWipeDisk>true</WillWipeDisk> 
                       <CreatePartitions>
-                        <!-- Windows RE Tools partition -->
-                        <CreatePartition wcm:action="add">
-                          <Order>1</Order> 
-                          <Type>Primary</Type> 
-                          <Size>300</Size> 
-                        </CreatePartition>
                         <!-- System partition (ESP) -->
                         <CreatePartition wcm:action="add">
-                          <Order>2</Order> 
+                          <Order>1</Order> 
                           <Type>EFI</Type> 
-                          <Size>100</Size> 
-                          <!-- Note: for Advanced Format Generation One drives, change to size=260 -->
+                          <Size>400</Size> 
                         </CreatePartition>
                         <!-- Microsoft reserved partition (MSR) -->
                         <CreatePartition wcm:action="add">
-                          <Order>3</Order> 
+                          <Order>2</Order> 
                           <Type>MSR</Type> 
                           <Size>128</Size> 
                         </CreatePartition>
-                        <!-- Windows partition -->
+                        <!-- Windows partition; installer automatically creates recovery partition -->
                         <CreatePartition wcm:action="add">
-                          <Order>4</Order> 
+                          <Order>3</Order> 
                           <Type>Primary</Type> 
                           <Extend>true</Extend> 
                         </CreatePartition>
                       </CreatePartitions>
 
                       <ModifyPartitions>
-                        <!-- Windows RE Tools partition -->
+                        <!-- System partition (ESP) -->
                         <ModifyPartition wcm:action="add">
                           <Order>1</Order> 
                           <PartitionID>1</PartitionID> 
-                          <Label>WINRE</Label> 
-                          <Format>NTFS</Format> 
-                          <TypeID>de94bba4-06d1-4d40-a16a-bfd50179d6ac</TypeID>
-                        </ModifyPartition>
-                        <!-- System partition (ESP) -->
-                        <ModifyPartition wcm:action="add">
-                          <Order>2</Order> 
-                          <PartitionID>2</PartitionID> 
                           <Label>System</Label> 
                           <Format>FAT32</Format> 
                         </ModifyPartition>
                         <!-- Windows partition -->
                         <ModifyPartition wcm:action="add">
-                          <Order>3</Order> 
-                          <PartitionID>4</PartitionID> 
+                          <Order>2</Order> 
+                          <PartitionID>3</PartitionID> 
                           <Label>Windows</Label> 
                           <Letter>C</Letter> 
                           <Format>NTFS</Format> 
@@ -80,7 +65,7 @@
 				<OSImage>
 					<InstallTo>
 						<DiskID>0</DiskID>
-						<PartitionID>4</PartitionID>
+						<PartitionID>3</PartitionID>
 					</InstallTo>
 				</OSImage>
 			</ImageInstall>
@@ -111,7 +96,12 @@
 	<settings pass="generalize"></settings>
         %if not sysprep:
 	<settings pass="specialize">
-		<component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+          <component name="microsoft-windows-securestartup-filterdriver-" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <PreventDeviceEncryption>true</PreventDeviceEncryption>
+          </component>
+
+
+<component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
 			<RunSynchronous>
 				<RunSynchronousCommand wcm:action="add">
 					<Order>1</Order>
@@ -226,25 +216,27 @@
 			<UserLocale>en-US</UserLocale>
 		</component>
 		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
-			<UserAccounts>
+                  %if (not sysprep) or wconfig.admin_password:
+		  <UserAccounts>
 				<LocalAccounts>
 					<LocalAccount wcm:action="add">
 						<Name>Admin</Name>
 						<Group>Administrators</Group>
 						<Password>
-							<Value>${wconfig.admin_password}</Value>
+							<Value>${wconfig.admin_password or 'admin'}</Value>
 							<PlainText>true</PlainText>
 						</Password>
 					</LocalAccount>
 				</LocalAccounts>
 			</UserAccounts>
+                        %endif
                         %if not sysprep:
 			<AutoLogon>
 				<Username>Admin</Username>
 				<Enabled>true</Enabled>
 				<LogonCount>1</LogonCount>
 				<Password>
-					<Value>${wconfig.admin_password}</Value>
+					<Value>${wconfig.admin_password or 'admin'}</Value>
 					<PlainText>true</PlainText>
 				</Password>
 			</AutoLogon>
