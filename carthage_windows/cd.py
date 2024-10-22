@@ -151,6 +151,7 @@ class AutoUnattendCd(ModelTasks):
                 wconfig.firstlogon_powershell.extend([
                     'Add-WindowsCapability -online -name OpenSSH.Server~~~~0.0.1.0',
                     f'Set-Service sshd -StartupType automatic {run_service}',
+                    'get-NetFirewallRule -name *openssh* |set-NetFirewallRule -profile public,private,domain',
                     ])
             wconfig.oem_files.append(self.stamp_path/'sysprep_unattend.xml')
             if wconfig.generalize:
