@@ -33,8 +33,14 @@ class layout(carthage_windows.layout.layout):
     class net_config(NetworkConfigModel):
         add('eth0', mac=persistent_random_mac, net=injector_access('windows_net'))
 
+    @provides(carthage.vm.vm_image_key)
     class image(LibvirtWindowsBaseImage):
         pass
+
+    class vm_1(MachineModel):
+        add_provider(machine_implementation_key, dependency_quote(carthage.vm.Vm))
+        ssh_login_user = 'admin'
+        
 
 
 @async_test
@@ -46,3 +52,17 @@ async def test_image_build(ainjector):
     with TestTiming(32*60):
         await l.image.async_become_ready()
     
+@async_test
+async def test_use_image(ainjector):
+    l = await ainjector(layout)
+    ainjector = l.ainjector
+    with TestTiming(32*60):
+        await l.image.async_become_ready()
+    with TestTiming(10*60):
+        vm =l.vm_1.machine
+        try:
+            async with vm.machine_running():
+                await vm.ssh('powershell ls')
+        finally:
+            await vm.delete()
+            
