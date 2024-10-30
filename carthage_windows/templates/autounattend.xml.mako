@@ -205,6 +205,13 @@
 			<ComputerName>windows-base</ComputerName>
 		</component>
 	</settings>
+        %else:
+	<settings pass="specialize">
+          <component name="microsoft-windows-securestartup-filterdriver-" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <PreventDeviceEncryption>true</PreventDeviceEncryption>
+          </component>
+        </settings>
+
         %endif
 	<settings pass="auditSystem"></settings>
 	<settings pass="auditUser"></settings>
