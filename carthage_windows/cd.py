@@ -153,6 +153,11 @@ class AutoUnattendCd(ModelTasks):
                     f'Set-Service sshd -StartupType automatic {run_service}',
                     'get-NetFirewallRule -name *openssh* |set-NetFirewallRule -profile public,private,domain',
                     ])
+            if wconfig.disable_device_encryption:
+                wconfig.specialize_powershell.extend([
+                    'New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker" -Name "PreventDeviceEncryption" -Value 1 -PropertyType DWord',
+                    'New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker" -Name "DisableBDE" -Value 1 -PropertyType DWord'])
+
             wconfig.oem_files.append(self.stamp_path/'sysprep_unattend.xml')
             if wconfig.generalize:
                 wconfig.firstlogon_powershell.append(
@@ -191,7 +196,7 @@ class LibvirtWindowsBaseImage(LibvirtImageModel):
     self_provider(InjectionKey(carthage.image.ImageVolume))
     name = 'windows_base'
     create_size=128*1024**3
-    memory = 16*1024**3
+    memory_mb = 16*1024
     cpus = 4
     console_needed = True
     disk_config = [

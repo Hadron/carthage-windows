@@ -32,6 +32,9 @@ class WindowsConfig:
 #: The password for the admin local account.
     admin_password:str = 'admin'
 
+    #: Disable device encryption
+    disable_device_encryption: bool = True
+    
     #: Each list entry is a set of powershell code that will be run in the specialize pass. These items are concatenated into a single powershell script that is run in that pass.
     specialize_powershell: list = dataclasses.field(default_factory=lambda: [])
 
