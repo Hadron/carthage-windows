@@ -155,8 +155,8 @@ class AutoUnattendCd(ModelTasks):
                     ])
             if wconfig.disable_device_encryption:
                 wconfig.specialize_powershell.extend([
-                    'New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker" -Name "PreventDeviceEncryption" -Value 1 -PropertyType DWord',
-                    'New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker" -Name "DisableBDE" -Value 1 -PropertyType DWord'])
+                    'New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\BitLocker" -Name "PreventDeviceEncryption" -Value 1 -PropertyType DWord',
+                    'New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\BitLocker" -Name "DisableBDE" -Value 1 -PropertyType DWord'])
 
             wconfig.oem_files.append(self.stamp_path/'sysprep_unattend.xml')
             if wconfig.generalize:
