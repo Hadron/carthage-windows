@@ -195,7 +195,7 @@ __all__ += ['AutoUnattendCd']
 class LibvirtWindowsBaseImage(LibvirtImageModel):
     self_provider(InjectionKey(carthage.image.ImageVolume))
     name = 'windows_base'
-    create_size=128*1024**3
+    size = 128*1024
     memory_mb = 16*1024
     cpus = 4
     console_needed = True
