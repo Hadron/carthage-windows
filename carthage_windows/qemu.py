@@ -81,5 +81,6 @@ class QemuDrivers(ModelTasks, WinConfigPlugin):
         for d in self.drivers:
             if list(drivers.glob(f'{d}/{v}/amd64')):
                 wconfig.driver_files.append(f'{drivers}/{d}/{v}/amd64/')
-
+            wconfig.driver_files.append(f'{drivers}/qxldod/w10/amd64/') #For some reason no w11 build of qxl
+            
 __all__ += ['QemuDrivers']
