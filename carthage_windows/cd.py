@@ -1,4 +1,4 @@
-# Copyright (C) 2024, Hadron Industries.
+# Copyright (C) 2024, 2025, Hadron Industries.
 # Carthage is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
 # as published by the Free Software Foundation. It is distributed
@@ -46,14 +46,24 @@ async def extract_cd(iso_file:str, out_dir:Path) -> Path:
 @inject_autokwargs(
     carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'),
     )
-class NoPromptInstallImage(ModelTasks):
+class NoPromptInstallImage(SetupTaskMixin):
 
     def find_base_cd(self):
-        images = self.carthage_windows.resource_dir.glob('assets/Win11*.iso')
+        if assets_dir := self.config_layout.windows.assets_dir:
+            assets_path = Path(assets_dir)/'windows'
+        else:
+            assets_path = self.carthage_windows.resource_dir/'assets'
+        images = assets_path.glob('Win11*.iso')
         images_list = list(images)
         assert len(images_list) == 1
         return images_list[0]
 
+    @memoproperty
+    def output_path(self):
+        res = Path(self.config_layout.windows.image_dir)
+        res.mkdir(parents=True, exist_ok=False)
+        return res
+    
     @memoproperty
     def base_name(self):
         '''The windows install image without .iso extension
@@ -65,7 +75,7 @@ class NoPromptInstallImage(ModelTasks):
         '''
         Retur a path to the final resulting image.
         '''
-        return self.stamp_path.joinpath(        self.base_name+'_noprompt.iso')
+        return self.output_path.joinpath(        self.base_name+'_noprompt.iso')
 
     def qemu_config(self, disk_config):
         return dict(
