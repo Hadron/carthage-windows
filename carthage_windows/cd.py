@@ -128,7 +128,7 @@ __all__ += ['NoPromptInstallImage']
     carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'),
     windows_version=windows_version_key,
     )
-class AutoUnattendCd(ModelTasks):
+class AutoUnattendCd(SetupTaskMixin):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
