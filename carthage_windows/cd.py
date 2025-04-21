@@ -48,6 +48,8 @@ async def extract_cd(iso_file:str, out_dir:Path) -> Path:
     )
 class NoPromptInstallImage(SetupTaskMixin):
 
+    stamp_subdir = 'carthage_windows/no_prompt_install'
+
     def find_base_cd(self):
         if assets_dir := self.config_layout.windows.assets_dir:
             assets_path = Path(assets_dir)/'windows'
@@ -73,7 +75,7 @@ class NoPromptInstallImage(SetupTaskMixin):
     @memoproperty
     def image_name(self):
         '''
-        Retur a path to the final resulting image.
+        Return a path to the final resulting image.
         '''
         return self.output_path.joinpath(        self.base_name+'_noprompt.iso')
 
@@ -88,10 +90,10 @@ class NoPromptInstallImage(SetupTaskMixin):
     @setup_task("Repack without Prompt")
     async def repack_noprompt_image(self):
 # See https://palant.info/2023/02/13/automating-windows-installation-in-a-vm/ for the mkisofs options
-        extract_dir = self.stamp_path/'extract'
+        extract_dir = self.state_path/'extract'
         image = self.find_base_cd()
         iso_builder = files.CdContext(
-            self.stamp_path,
+            self.state_path,
             (self.image_name).name,
             '-iso-level', '4',
             '-disable-deep-relocation',
@@ -130,6 +132,8 @@ __all__ += ['NoPromptInstallImage']
     )
 class AutoUnattendCd(SetupTaskMixin):
 
+    stamp_subdir = 'carthage_windows/autounattend_cd'
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.injector.add_provider(InjectionKey(WindowsConfig), self.build_config)
