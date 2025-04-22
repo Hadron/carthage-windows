@@ -29,7 +29,11 @@ class QemuDrivers(ModelTasks, WinConfigPlugin):
     name = 'qemu_windows_config'
     
     def find_base_cd(self):
-        images = self.carthage_windows.resource_dir.glob('assets/virtio-*.iso')
+        if assets_dir := self.config_layout.windows.assets_dir:
+            assets_path = Path(assets_dir)/'windows'
+        else:
+            assets_path = self.carthage_windows.resource_dir/'assets'
+        images = assets_path.glob('virtio-*.iso')
         images_list = list(images)
         assert len(images_list) == 1
         return images_list[0]
