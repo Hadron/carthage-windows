@@ -63,7 +63,7 @@ class NoPromptInstallImage(SetupTaskMixin):
     @memoproperty
     def output_path(self):
         res = Path(self.config_layout.windows.image_dir)
-        res.mkdir(parents=True, exist_ok=False)
+        res.mkdir(parents=True, exist_ok=True)
         return res
     
     @memoproperty
@@ -93,7 +93,7 @@ class NoPromptInstallImage(SetupTaskMixin):
         extract_dir = self.state_path/'extract'
         image = self.find_base_cd()
         iso_builder = files.CdContext(
-            self.state_path,
+            self.output_path,
             (self.image_name).name,
             '-iso-level', '4',
             '-disable-deep-relocation',
