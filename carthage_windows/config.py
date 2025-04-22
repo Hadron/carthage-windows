@@ -7,6 +7,7 @@
 # LICENSE for details.
 
 import dataclasses
+from pathlib import Path
 from carthage import *
 import carthage.ssh
 
