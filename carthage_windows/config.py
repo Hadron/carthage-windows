@@ -100,9 +100,14 @@ class AuthorizedKeysPlugin(WinConfigPlugin):
 __all__ += ['AuthorizedKeysPlugin']
 
 @inject(
-    carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'))
+    carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'),
+    injector=Injector)
 def find_asset(glob, *, carthage_windows):
-    assets = carthage_windows.resource_dir/'assets'
+    config = injector(ConfigLayout)
+    if assets_dir := config.windows.assets_dir:
+        assets = Path(assets_dir)/'windows'
+    else:
+        assets = carthage_windows.resource_dir/'assets'
     results = list(assets.glob(glob))
     if len(results) == 0:
         return None
