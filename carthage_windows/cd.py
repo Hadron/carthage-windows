@@ -57,7 +57,7 @@ class NoPromptInstallImage(SetupTaskMixin):
             assets_path = self.carthage_windows.resource_dir/'assets'
         images = assets_path.glob('Win11*.iso')
         images_list = list(images)
-        assert len(images_list) == 1
+        assert len(images_list) == 1, f'Expecting only one image in {assets_path}'
         return images_list[0]
 
     @memoproperty
