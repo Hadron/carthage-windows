@@ -102,7 +102,7 @@ __all__ += ['AuthorizedKeysPlugin']
 @inject(
     carthage_windows=InjectionKey(CarthagePlugin, name='carthage-windows'),
     injector=Injector)
-def find_asset(glob, *, carthage_windows):
+def find_asset(glob, *, carthage_windows, injector):
     config = injector(ConfigLayout)
     if assets_dir := config.windows.assets_dir:
         assets = Path(assets_dir)/'windows'
