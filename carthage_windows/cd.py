@@ -56,7 +56,9 @@ class NoPromptInstallImage(SetupTaskMixin):
             assets_path = Path(assets_dir)/'windows'
         else:
             assets_path = self.carthage_windows.resource_dir/'assets'
-        images = assets_path.glob('Win11*.iso')
+        if self.config_layout.windows.install_media is None:
+            self.config_layout.windows.install_media = 'Win11*.iso'
+        images = assets_path.glob(self.config_layout.windows.install_media)
         images_list = list(images)
         assert len(images_list) == 1, f'Expecting only one image in {assets_path}'
         return images_list[0]
