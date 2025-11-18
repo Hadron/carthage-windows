@@ -12,6 +12,7 @@ from pathlib import Path
 import carthage
 from carthage import *
 from carthage.modeling import *
+from carthage.libvirt.modeling import *
 from carthage import files
 from carthage import sh
 from carthage.plugins import CarthagePlugin
