@@ -19,7 +19,7 @@ class WindowsSchema(carthage.config.ConfigSchema, prefix='windows'):
     #: Where we place large output artificats like the modified windows CD
     image_dir:carthage.config.ConfigPath = '{cache_dir}/windows'
     #: Name or pattern to glob for Windows Install Media
-    install_media: str = None
+    install_media: str = 'Win11*.iso'
 
 @inject(injector=Injector)
 def carthage_plugin(injector):

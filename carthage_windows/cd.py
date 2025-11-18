@@ -56,11 +56,18 @@ class NoPromptInstallImage(SetupTaskMixin):
             assets_path = Path(assets_dir)/'windows'
         else:
             assets_path = self.carthage_windows.resource_dir/'assets'
-        if self.config_layout.windows.install_media is None:
-            self.config_layout.windows.install_media = 'Win11*.iso'
+        if not assets_path.is_dir():
+            raise FileNotFoundError(f"'{assets_path}' is not a directory.")
+
         images = assets_path.glob(self.config_layout.windows.install_media)
         images_list = list(images)
-        assert len(images_list) == 1, f'Expecting only one image in {assets_path}'
+
+        if len(images_list) == 0:
+            raise ValueError(f"Found no images at '{assets_path}' with glob "
+                    f"'{self.config_layout.windows.install_media}'."
+                     f"\nDid you mean one of {', '.join(map(lambda x: x.name, assets_path.iterdir()))}?")
+        elif len(images_list) > 1:
+            raise ValueError(f"Expected only one image in '{assets_path}' but found '{', '.join(map(lambda x: x.name, images_list))}'")
         return images_list[0]
 
     @memoproperty
